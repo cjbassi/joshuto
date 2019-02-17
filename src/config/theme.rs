@@ -24,7 +24,7 @@ pub struct JoshutoRawColorTheme {
     pub bold: Option<bool>,
     pub underline: Option<bool>,
     pub prefix: Option<String>,
-    pub prefixsize: Option<usize>,
+    pub prefixsize: Option<u32>,
 }
 
 impl JoshutoRawColorTheme {
@@ -139,7 +139,7 @@ pub struct JoshutoColorTheme {
     pub bold: bool,
     pub underline: bool,
     pub prefix: Option<String>,
-    pub prefixsize: Option<usize>,
+    pub prefixsize: Option<u32>,
 }
 
 #[derive(Debug, Clone)]

@@ -14,27 +14,13 @@ pub use self::theme::{JoshutoColorTheme, JoshutoTheme};
 
 use self::serde::de::DeserializeOwned;
 use std::fs;
-use std::path::{Path, PathBuf};
 
+use utils::search_directories;
 use CONFIG_HIERARCHY;
 
 // implemented by config file implementations to turn a RawConfig into a Config
 trait Flattenable<T> {
     fn flatten(self) -> T;
-}
-
-// searches a list of folders for a given file in order of preference
-pub fn search_directories<P>(filename: &str, directories: &[P]) -> Option<PathBuf>
-where
-    P: AsRef<Path>,
-{
-    for path in directories.iter() {
-        let filepath = path.as_ref().join(filename);
-        if filepath.exists() {
-            return Some(filepath);
-        }
-    }
-    None
 }
 
 // parses a config file into its appropriate format

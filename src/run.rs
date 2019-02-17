@@ -9,22 +9,22 @@ use config;
 use context::JoshutoContext;
 use preview;
 use ui;
+use utils::{Point, Rectangle};
 use window::JoshutoPanel;
 
 fn recurse_get_keycommand<'a>(
     keymap: &'a HashMap<i32, CommandKeybind>,
 ) -> Option<&Box<dyn JoshutoCommand>> {
-    let (term_rows, term_cols) = ui::getmaxyx();
+    let (width, height) = ui::get_terminal_dimensions();
     ncurses::timeout(-1);
 
     let ch: i32;
     {
         let keymap_len = keymap.len();
-        let win = JoshutoPanel::new(
-            keymap_len as i32 + 1,
-            term_cols,
-            ((term_rows - keymap_len as i32 - 2) as usize, 0),
-        );
+        let win = JoshutoPanel::new(Rectangle::new(
+            Point::new(height as i32 - keymap.len() as i32 - 2, 0),
+            Point::new(height as i32 - 2, width as i32),
+        ));
 
         let mut display_vec: Vec<String> = Vec::with_capacity(keymap_len);
         for (key, val) in keymap {
@@ -36,7 +36,7 @@ fn recurse_get_keycommand<'a>(
         ui::display_options(&win, &display_vec);
         ncurses::doupdate();
 
-        ch = ncurses::wgetch(win.win);
+        ch = ncurses::wgetch(win.window);
     }
     ncurses::doupdate();
 
@@ -54,12 +54,12 @@ fn recurse_get_keycommand<'a>(
 fn process_threads(context: &mut JoshutoContext) {
     let thread_wait_duration: time::Duration = time::Duration::from_millis(100);
 
-    let mut i: usize = 0;
+    let mut i: u32 = 0;
     while i < context.threads.len() {
         match &context.threads[i].recv_timeout(&thread_wait_duration) {
             Ok(progress_info) => {
                 if progress_info.bytes_finished == progress_info.total_bytes {
-                    ncurses::werase(context.views.bot_win.win);
+                    ncurses::werase(context.views.window_bot.window);
                     let thread = context.threads.swap_remove(i);
                     thread.handle.join().unwrap();
                     let (tab_src, tab_dest) = (thread.tab_src, thread.tab_dest);
@@ -89,14 +89,14 @@ fn process_threads(context: &mut JoshutoContext) {
                     let percent = (progress_info.bytes_finished as f64
                         / progress_info.total_bytes as f64)
                         as f32;
-                    ui::draw_progress_bar(&context.views.bot_win, percent);
-                    ncurses::wnoutrefresh(context.views.bot_win.win);
+                    ui::draw_progress_bar(&context.views.window_bot, percent);
+                    ncurses::wnoutrefresh(context.views.window_bot.window);
                     i = i + 1;
                 }
                 ncurses::doupdate();
             }
             Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
-                ncurses::werase(context.views.bot_win.win);
+                ncurses::werase(context.views.window_bot.window);
                 let thread = context.threads.swap_remove(i);
                 let (tab_src, tab_dest) = (thread.tab_src, thread.tab_dest);
                 thread.handle.join().unwrap();
@@ -132,7 +132,7 @@ fn process_threads(context: &mut JoshutoContext) {
 }
 
 fn resize_handler(context: &mut JoshutoContext) {
-    ui::redraw_tab_view(&context.views.tab_win, &context);
+    ui::redraw_tab_view(&context.views.window_tab, &context);
     {
         let curr_tab = &mut context.tabs[context.curr_tab_index];
         curr_tab.refresh(

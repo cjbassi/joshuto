@@ -1,7 +1,7 @@
 #[derive(Clone, Debug)]
 pub struct JoshutoPageState {
-    pub start: usize,
-    pub end: usize,
+    pub start: u32,
+    pub end: u32,
 }
 
 impl JoshutoPageState {
@@ -9,52 +9,46 @@ impl JoshutoPageState {
         JoshutoPageState { start: 0, end: 0 }
     }
 
-    pub fn update_page_state(
-        &mut self,
-        index: usize,
-        win_rows: i32,
-        vec_len: usize,
-        offset: usize,
-    ) {
-        if self.end != win_rows as usize + self.start {
-            self.end = self.start + win_rows as usize;
+    pub fn update_page_state(&mut self, index: u32, win_rows: i32, vec_len: u32, offset: u32) {
+        if self.end != win_rows as u32 + self.start {
+            self.end = self.start + win_rows as u32;
         }
         if self.end > vec_len {
             self.end = vec_len
         }
 
         if self.start + offset >= index {
-            self.start = if index as usize <= offset {
+            self.start = if index as u32 <= offset {
                 0
             } else {
-                index as usize - offset
+                index as u32 - offset
             };
-            self.end = if self.start + win_rows as usize >= vec_len {
+            self.end = if self.start + win_rows as u32 >= vec_len {
                 vec_len
             } else {
-                self.start + win_rows as usize
+                self.start + win_rows as u32
             };
-            self.start = if self.end <= win_rows as usize {
+            self.start = if self.end <= win_rows as u32 {
                 0
             } else {
-                self.end - win_rows as usize
+                self.end - win_rows as u32
             };
         }
         if self.end <= index + offset {
-            self.end = if index as usize + offset >= vec_len {
+            self.end = if index as u32 + offset >= vec_len {
                 vec_len
             } else {
-                index as usize + offset
+                index as u32 + offset
             };
-            self.start = if self.end <= win_rows as usize {
+            self.start = if self.end <= win_rows as u32 {
                 0
             } else {
-                self.end - win_rows as usize
+                self.end - win_rows as u32
             };
-            self.end = if self.start + win_rows as usize >= vec_len {
+            self.end = if self.start + win_rows as u32 >= vec_len {
                 vec_len
             } else {
-                self.start + win_rows as usize
+                self.start + win_rows as u32
             };
         }
     }

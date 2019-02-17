@@ -20,12 +20,12 @@ pub fn preview_file(context: &mut JoshutoContext) {
                         context.views.right_win.display_contents(&context.theme_t, dirlist, context.config_t.scroll_offset);
                         context.views.right_win.queue_for_refresh();
                     } else {
-                        ncurses::werase(context.views.right_win.win);
-                        ncurses::waddstr(context.views.right_win.win, "Can't find direntry");
+                        ncurses::werase(context.views.right_win.window);
+                        ncurses::waddstr(context.views.right_win.window, "Can't find direntry");
                         context.views.right_win.queue_for_refresh();
                     }
                 } else {
-                    ncurses::werase(context.views.right_win.win);
+                    ncurses::werase(context.views.right_win.window);
 
                     if let Some(file_ext) = entry.path.extension() {
                         if let Some(file_ext) = file_ext.to_str() {
@@ -58,11 +58,11 @@ pub fn preview_file(context: &mut JoshutoContext) {
                         }
                     }
 
-                    ncurses::wnoutrefresh(context.views.right_win.win);
+                    ncurses::wnoutrefresh(context.views.right_win.window);
                 }
             } else {
-                ncurses::werase(context.views.right_win.win);
-                ncurses::wnoutrefresh(context.views.right_win.win);
+                ncurses::werase(context.views.right_win.window);
+                ncurses::wnoutrefresh(context.views.right_win.window);
             }
         }
     */
@@ -71,7 +71,7 @@ pub fn preview_file(context: &mut JoshutoContext) {
 pub fn text_preview(win: &window::JoshutoPanel, path: &PathBuf) {
     let mut command = process::Command::new("head");
     command.arg("-n");
-    command.arg(win.cols.to_string());
+    command.arg(win.rect.width().to_string());
     command.arg(path.as_os_str());
     command.stdin(std::process::Stdio::piped());
     command.stdout(std::process::Stdio::piped());
@@ -87,7 +87,7 @@ pub fn text_preview(win: &window::JoshutoPanel, path: &PathBuf) {
             }
         }
         Err(e) => {
-            ncurses::waddstr(win.win, e.to_string().as_str());
+            ncurses::waddstr(win.window, e.to_string().as_str());
         }
     }
     // bat joshuto.rs --terminal-width 20 --wrap=never --line-range 0:26 --style='numbers'

@@ -67,7 +67,7 @@ impl OpenFile {
             Ok(_) => {}
             Err(e) => {
                 ui::wprint_err(
-                    &context.views.bot_win,
+                    &context.views.window_bot,
                     format!("{}: {:?}", e, path).as_str(),
                 );
                 return;
@@ -97,7 +97,7 @@ impl OpenFile {
         match path.strip_prefix(curr_tab.curr_path.as_path()) {
             Ok(s) => curr_tab.curr_path.push(s),
             Err(e) => {
-                ui::wprint_err(&context.views.bot_win, e.to_string().as_str());
+                ui::wprint_err(&context.views.window_bot, e.to_string().as_str());
                 return;
             }
         }
@@ -160,10 +160,10 @@ impl JoshutoRunnable for OpenFile {
                 if paths.len() > 0 {
                     Self::into_file(&paths);
                 } else {
-                    ui::wprint_msg(&context.views.bot_win, "No files selected: 0");
+                    ui::wprint_msg(&context.views.window_bot, "No files selected: 0");
                 }
             } else {
-                ui::wprint_msg(&context.views.bot_win, "No files selected: None");
+                ui::wprint_msg(&context.views.window_bot, "No files selected: None");
             }
             ncurses::doupdate();
         }
@@ -194,7 +194,7 @@ impl OpenFileWith {
             let display_win = window::JoshutoPanel::new(
                 option_size as i32 + 2,
                 term_cols,
-                (term_rows as usize - option_size - 2, 0),
+                (term_rows as u32 - option_size - 2, 0),
             );
 
             let mut display_vec: Vec<String> = Vec::with_capacity(option_size);
@@ -207,12 +207,8 @@ impl OpenFileWith {
             ui::display_options(&display_win, &display_vec);
             ncurses::doupdate();
 
-            let textfield = JoshutoTextField::new(
-                1,
-                term_cols,
-                (term_rows as usize - 1, 0),
-                PROMPT.to_string(),
-            );
+            let textfield =
+                JoshutoTextField::new(1, term_cols, (term_rows as u32 - 1, 0), PROMPT.to_string());
             user_input = textfield.readline_with_initial("", "");
         }
         ncurses::doupdate();
@@ -221,7 +217,7 @@ impl OpenFileWith {
             if user_input.len() == 0 {
                 return;
             }
-            match user_input.parse::<usize>() {
+            match user_input.parse::<u32>() {
                 Ok(s) => {
                     if s < mimetype_options.len() {
                         ncurses::savetty();

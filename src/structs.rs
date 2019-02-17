@@ -164,16 +164,16 @@ impl JoshutoDirList {
     }
 
     fn get_curr_mut_(&mut self, index: i32) -> Option<&mut JoshutoDirEntry> {
-        if index >= 0 && (index as usize) < self.contents.len() {
-            Some(&mut self.contents[index as usize])
+        if index >= 0 && (index as u32) < self.contents.len() {
+            Some(&mut self.contents[index as u32])
         } else {
             None
         }
     }
 
     fn get_curr_ref_(&self, index: i32) -> Option<&JoshutoDirEntry> {
-        if index >= 0 && (index as usize) < self.contents.len() {
-            Some(&self.contents[index as usize])
+        if index >= 0 && (index as u32) < self.contents.len() {
+            Some(&self.contents[index as u32])
         } else {
             None
         }
@@ -185,9 +185,9 @@ impl JoshutoDirList {
     }
 
     fn toggle_select(&mut self, index: i32) {
-        if index >= 0 && (index as usize) < self.contents.len() {
-            let tmp_bool = !self.contents[index as usize].selected;
-            self.contents[index as usize].selected = tmp_bool;
+        if index >= 0 && (index as u32) < self.contents.len() {
+            let tmp_bool = !self.contents[index as u32].selected;
+            self.contents[index as u32].selected = tmp_bool;
         }
     }
 }

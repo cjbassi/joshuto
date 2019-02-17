@@ -19,7 +19,7 @@ impl JoshutoContext {
         let username: String = whoami::username();
         let hostname: String = whoami::hostname();
 
-        let views: JoshutoView = JoshutoView::new(config_t.column_ratio);
+        let views = JoshutoView::new(config_t.column_ratio);
 
         JoshutoContext {
             username,

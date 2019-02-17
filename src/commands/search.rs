@@ -31,12 +31,8 @@ impl JoshutoRunnable for Search {
         let (term_rows, term_cols) = ui::getmaxyx();
         let user_input: Option<String>;
         {
-            let textfield = JoshutoTextField::new(
-                1,
-                term_cols,
-                (term_rows as usize - 1, 0),
-                PROMPT.to_string(),
-            );
+            let textfield =
+                JoshutoTextField::new(1, term_cols, (term_rows as u32 - 1, 0), PROMPT.to_string());
 
             user_input = textfield.readline_with_initial("", "");
         }
@@ -50,7 +46,7 @@ impl JoshutoRunnable for Search {
             let curr_tab = &context.tabs[context.curr_tab_index];
 
             if let Some(curr_list) = curr_tab.curr_list.as_ref() {
-                let offset = curr_list.index as usize;
+                let offset = curr_list.index as u32;
                 let contents_len = curr_list.contents.len();
                 for i in 0..contents_len {
                     let file_name_lower = curr_list.contents[(offset + i) % contents_len]

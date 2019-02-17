@@ -17,11 +17,11 @@ pub struct SortRawOption {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct JoshutoRawConfig {
-    scroll_offset: Option<usize>,
+    scroll_offset: Option<u32>,
     tilde_in_titlebar: Option<bool>,
     sort_type: Option<String>,
     sort_option: Option<SortRawOption>,
-    column_ratio: Option<[usize; 3]>,
+    column_ratio: Option<[u32; 3]>,
 }
 
 impl JoshutoRawConfig {
@@ -44,7 +44,7 @@ impl Flattenable<JoshutoConfig> for JoshutoRawConfig {
             None => (1, 3, 4),
         };
 
-        let scroll_offset: usize = self.scroll_offset.unwrap_or(6);
+        let scroll_offset: u32 = self.scroll_offset.unwrap_or(6);
         let tilde_in_titlebar: bool = self.tilde_in_titlebar.unwrap_or(true);
 
         let show_hidden: bool;
@@ -94,10 +94,10 @@ impl Flattenable<JoshutoConfig> for JoshutoRawConfig {
 
 #[derive(Debug, Clone)]
 pub struct JoshutoConfig {
-    pub scroll_offset: usize,
+    pub scroll_offset: u32,
     pub tilde_in_titlebar: bool,
     pub sort_type: sort::SortType,
-    pub column_ratio: (usize, usize, usize),
+    pub column_ratio: (u32, u32, u32),
 }
 
 impl JoshutoConfig {

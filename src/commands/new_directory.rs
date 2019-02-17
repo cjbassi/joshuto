@@ -35,12 +35,8 @@ impl JoshutoRunnable for NewDirectory {
         let user_input: Option<String>;
 
         {
-            let textfield = JoshutoTextField::new(
-                1,
-                term_cols,
-                (term_rows as usize - 1, 0),
-                PROMPT.to_string(),
-            );
+            let textfield =
+                JoshutoTextField::new(1, term_cols, (term_rows as u32 - 1, 0), PROMPT.to_string());
             user_input = textfield.readline_with_initial("", "");
         }
 
@@ -52,7 +48,7 @@ impl JoshutoRunnable for NewDirectory {
                     ReloadDirList::reload(context);
                 }
                 Err(e) => {
-                    ui::wprint_err(&context.views.bot_win, e.to_string().as_str());
+                    ui::wprint_err(&context.views.window_bot, e.to_string().as_str());
                 }
             }
         }

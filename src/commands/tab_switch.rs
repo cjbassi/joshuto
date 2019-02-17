@@ -16,7 +16,7 @@ impl TabSwitch {
     }
 
     pub fn tab_switch(new_index: i32, context: &mut JoshutoContext) {
-        context.curr_tab_index = new_index as usize;
+        context.curr_tab_index = new_index as u32;
         {
             let curr_tab = &mut context.tabs[context.curr_tab_index];
             curr_tab.reload_contents(&context.config_t.sort_type);
@@ -28,7 +28,7 @@ impl TabSwitch {
             );
         }
 
-        ui::redraw_tab_view(&context.views.tab_win, &context);
+        ui::redraw_tab_view(&context.views.window_tab, &context);
 
         ncurses::doupdate();
     }

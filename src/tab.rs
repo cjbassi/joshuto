@@ -84,24 +84,24 @@ impl JoshutoTab {
         &mut self,
         views: &JoshutoView,
         tilde_in_titlebar: bool,
-        scroll_offset: usize,
+        scroll_offset: u32,
         username: &str,
         hostname: &str,
     ) {
-        self.refresh_curr(&views.mid_win, scroll_offset);
-        self.refresh_parent(&views.left_win, scroll_offset);
-        self.refresh_path_status(&views.top_win, username, hostname, tilde_in_titlebar);
-        self.refresh_file_status(&views.bot_win);
+        self.refresh_curr(&views.window_mid, scroll_offset);
+        self.refresh_parent(&views.window_left, scroll_offset);
+        self.refresh_path_status(&views.window_top, username, hostname, tilde_in_titlebar);
+        self.refresh_file_status(&views.window_bot);
     }
 
-    pub fn refresh_curr(&mut self, win: &JoshutoPanel, scroll_offset: usize) {
+    pub fn refresh_curr(&mut self, win: &JoshutoPanel, scroll_offset: u32) {
         if let Some(ref mut s) = self.curr_list {
             win.display_contents_detailed(s, scroll_offset);
             win.queue_for_refresh();
         }
     }
 
-    pub fn refresh_parent(&mut self, win: &JoshutoPanel, scroll_offset: usize) {
+    pub fn refresh_parent(&mut self, win: &JoshutoPanel, scroll_offset: u32) {
         if let Some(ref mut s) = self.parent_list {
             win.display_contents(s, scroll_offset);
             win.queue_for_refresh();
@@ -110,20 +110,20 @@ impl JoshutoTab {
 
     pub fn refresh_file_status(&self, win: &JoshutoPanel) {
         if let Some(ref dirlist) = self.curr_list {
-            ncurses::werase(win.win);
-            ncurses::wmove(win.win, 0, 0);
+            ncurses::werase(win.window);
+            ncurses::wmove(win.window, 0, 0);
 
             if let Some(entry) = dirlist.get_curr_ref() {
-                ui::wprint_file_mode(win.win, entry);
-                ncurses::waddstr(win.win, " ");
+                ui::wprint_file_mode(win.window, entry);
+                ncurses::waddstr(win.window, " ");
                 ncurses::waddstr(
-                    win.win,
+                    win.window,
                     format!("{}/{} ", dirlist.index + 1, dirlist.contents.len()).as_str(),
                 );
-                ncurses::waddstr(win.win, "  ");
-                ui::wprint_file_info(win.win, entry);
+                ncurses::waddstr(win.window, "  ");
+                ui::wprint_file_info(win.window, entry);
             }
-            ncurses::wnoutrefresh(win.win);
+            ncurses::wnoutrefresh(win.window);
         }
     }
 
@@ -136,29 +136,29 @@ impl JoshutoTab {
     ) {
         let path_str: &str = self.curr_path.to_str().unwrap();
 
-        ncurses::werase(win.win);
-        ncurses::wattron(win.win, ncurses::A_BOLD());
-        ncurses::mvwaddstr(win.win, 0, 0, username);
-        ncurses::waddstr(win.win, "@");
-        ncurses::waddstr(win.win, hostname);
+        ncurses::werase(win.window);
+        ncurses::wattron(win.window, ncurses::A_BOLD());
+        ncurses::mvwaddstr(win.window, 0, 0, username);
+        ncurses::waddstr(win.window, "@");
+        ncurses::waddstr(win.window, hostname);
 
-        ncurses::waddstr(win.win, " ");
+        ncurses::waddstr(win.window, " ");
 
-        ncurses::wattron(win.win, ncurses::COLOR_PAIR(theme_t.directory.colorpair));
+        ncurses::wattron(win.window, ncurses::COLOR_PAIR(theme_t.directory.colorpair));
         if tilde_in_titlebar {
             let path_str = &path_str.replace(&format!("/home/{}", username), "~");
-            ncurses::waddstr(win.win, path_str);
+            ncurses::waddstr(win.window, path_str);
         } else {
-            ncurses::waddstr(win.win, path_str);
+            ncurses::waddstr(win.window, path_str);
         }
-        ncurses::waddstr(win.win, "/");
-        ncurses::wattroff(win.win, ncurses::COLOR_PAIR(theme_t.directory.colorpair));
+        ncurses::waddstr(win.window, "/");
+        ncurses::wattroff(win.window, ncurses::COLOR_PAIR(theme_t.directory.colorpair));
         if let Some(ref dirlist) = self.curr_list {
             if let Some(entry) = dirlist.get_curr_ref() {
-                ncurses::waddstr(win.win, &entry.file_name_as_string);
+                ncurses::waddstr(win.window, &entry.file_name_as_string);
             }
         }
-        ncurses::wattroff(win.win, ncurses::A_BOLD());
+        ncurses::wattroff(win.window, ncurses::A_BOLD());
         win.queue_for_refresh();
     }
 }

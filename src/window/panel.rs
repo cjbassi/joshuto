@@ -2,38 +2,39 @@ extern crate ncurses;
 
 use structs;
 use ui;
+use utils::{Point, Rectangle};
 
 #[derive(Debug, Clone)]
 pub struct JoshutoPanel {
-    pub win: ncurses::WINDOW,
+    pub window: ncurses::WINDOW,
     pub panel: ncurses::PANEL,
-    pub rows: i32,
-    pub cols: i32,
-    /* coords (y, x) */
-    pub coords: (usize, usize),
+    pub rect: Rectangle,
 }
 
 impl std::ops::Drop for JoshutoPanel {
     fn drop(&mut self) {
         ncurses::del_panel(self.panel);
-        ncurses::delwin(self.win);
+        ncurses::delwin(self.window);
         ncurses::update_panels();
     }
 }
 
 impl JoshutoPanel {
-    pub fn new(rows: i32, cols: i32, coords: (usize, usize)) -> Self {
-        let win = ncurses::newwin(rows, cols, coords.0 as i32, coords.1 as i32);
-        let panel = ncurses::new_panel(win);
-        ncurses::leaveok(win, true);
+    pub fn new(rect: Rectangle) -> Self {
+        let window = ncurses::newwin(
+            rect.height() as i32,
+            rect.width() as i32,
+            rect.min.y,
+            rect.min.x,
+        );
+        let panel = ncurses::new_panel(window);
+        ncurses::leaveok(window, true);
 
-        ncurses::wnoutrefresh(win);
+        ncurses::wnoutrefresh(window);
         JoshutoPanel {
-            win,
+            window,
             panel,
-            rows,
-            cols,
-            coords,
+            rect,
         }
     }
 
@@ -41,10 +42,10 @@ impl JoshutoPanel {
         ncurses::top_panel(self.panel);
     }
     pub fn queue_for_refresh(&self) {
-        ncurses::wnoutrefresh(self.win);
+        ncurses::wnoutrefresh(self.window);
     }
 
-    pub fn display_contents(&self, dirlist: &mut structs::JoshutoDirList, scroll_offset: usize) {
+    pub fn display_contents(&self, dirlist: &mut structs::JoshutoDirList, scroll_offset: u32) {
         if self.non_empty_dir_checks(dirlist, scroll_offset) {
             Self::draw_dir_list(self, dirlist, ui::wprint_entry);
         }
@@ -53,7 +54,7 @@ impl JoshutoPanel {
     pub fn display_contents_detailed(
         &self,
         dirlist: &mut structs::JoshutoDirList,
-        scroll_offset: usize,
+        scroll_offset: u32,
     ) {
         if self.non_empty_dir_checks(dirlist, scroll_offset) {
             Self::draw_dir_list(self, dirlist, ui::wprint_entry_detailed);
@@ -63,17 +64,17 @@ impl JoshutoPanel {
     pub fn draw_dir_list(
         win: &JoshutoPanel,
         dirlist: &structs::JoshutoDirList,
-        draw_func: fn(&JoshutoPanel, &structs::JoshutoDirEntry, (usize, &str), (i32, i32)),
+        draw_func: fn(&JoshutoPanel, &structs::JoshutoDirEntry, (u32, &str), Point),
     ) {
         let dir_contents = &dirlist.contents;
         let (start, end) = (dirlist.pagestate.start, dirlist.pagestate.end);
 
-        let curr_index = dirlist.index as usize;
+        let curr_index = dirlist.index as u32;
 
         for i in start..end {
-            let coord: (i32, i32) = (i as i32 - start as i32, 0);
+            let point = Point::new(i as i32 - start as i32, 0);
 
-            ncurses::wmove(win.win, coord.0, coord.1);
+            ncurses::wmove(win.window, point.y, point.x);
             let entry = &dir_contents[i];
 
             let mut attr: ncurses::attr_t = 0;
@@ -82,18 +83,18 @@ impl JoshutoPanel {
             }
             let attrs = ui::get_theme_attr(attr, entry);
 
-            draw_func(win, entry, attrs.0, coord);
+            draw_func(win, entry, attrs.0, point);
 
-            ncurses::mvwchgat(win.win, coord.0, coord.1, -1, attrs.1, attrs.2);
+            ncurses::mvwchgat(win.window, point.y, point.x, -1, attrs.1, attrs.2);
         }
     }
 
     fn non_empty_dir_checks(
         &self,
         dirlist: &mut structs::JoshutoDirList,
-        scroll_offset: usize,
+        scroll_offset: u32,
     ) -> bool {
-        if self.cols < 8 {
+        if self.rect.width() < 8 {
             return false;
         }
         let index = dirlist.index;
@@ -102,14 +103,17 @@ impl JoshutoPanel {
             ui::wprint_empty(self, "empty");
             return false;
         }
-        ncurses::werase(self.win);
+        ncurses::werase(self.window);
 
         if index >= 0 {
-            dirlist
-                .pagestate
-                .update_page_state(index as usize, self.rows, vec_len, scroll_offset);
+            dirlist.pagestate.update_page_state(
+                index,
+                self.rect.height() as i32,
+                vec_len,
+                scroll_offset,
+            );
         }
-        ncurses::wmove(self.win, 0, 0);
+        ncurses::wmove(self.window, 0, 0);
         return true;
     }
 }

@@ -2,20 +2,21 @@ extern crate ncurses;
 extern crate unicode_width;
 
 use config::keymap;
-use window;
+use utils::{Point, Rectangle};
+use window::JoshutoPanel;
 
 pub struct JoshutoTextField {
-    pub win: window::JoshutoPanel,
+    pub window: JoshutoPanel,
     pub prompt: String,
 }
 
 impl JoshutoTextField {
-    pub fn new(rows: i32, cols: i32, coord: (usize, usize), prompt: String) -> Self {
-        let win = window::JoshutoPanel::new(rows, cols, coord);
-        ncurses::keypad(win.win, true);
-        ncurses::scrollok(win.win, true);
+    pub fn new(rect: Rectangle, prompt: String) -> Self {
+        let window = JoshutoPanel::new(rect);
+        ncurses::keypad(window.window, true);
+        ncurses::scrollok(window.window, true);
 
-        JoshutoTextField { win, prompt }
+        JoshutoTextField { window, prompt }
     }
 
     pub fn readline_with_initial(&self, prefix: &str, suffix: &str) -> Option<String> {
@@ -26,7 +27,7 @@ impl JoshutoTextField {
             buf_vec.push(ch);
             curs_x = curs_x + char_len as i32;
         }
-        let curr_index: usize = buf_vec.len();
+        let curr_index: u32 = buf_vec.len();
 
         for ch in suffix.chars() {
             buf_vec.push(ch);
@@ -40,31 +41,31 @@ impl JoshutoTextField {
         &self,
         mut buffer: Vec<(char)>,
         mut curs_x: i32,
-        mut curr_index: usize,
+        mut curr_index: u32,
     ) -> Option<String> {
-        self.win.move_to_top();
+        self.window.move_to_top();
 
         let prompt_len = self.prompt.len();
-        let win = self.win.win;
-        ncurses::wmove(win, self.win.rows - 1, 0);
-        ncurses::waddstr(win, &self.prompt);
+        let window = self.window.window;
+        ncurses::wmove(window, self.window.rect.height() - 1, 0);
+        ncurses::waddstr(window, &self.prompt);
 
         ncurses::doupdate();
 
-        let coord = (0, self.win.coords.1 + prompt_len);
+        let point = Point::new(self.window.rect.min.x + prompt_len as i32, 0);
 
         loop {
-            ncurses::wmove(win, coord.0, coord.1 as i32);
+            ncurses::wmove(window, point.y, point.x);
             {
                 let str_ch: String = buffer.iter().collect();
-                ncurses::waddstr(win, &str_ch);
+                ncurses::waddstr(window, &str_ch);
             }
-            ncurses::waddstr(win, "    ");
+            ncurses::waddstr(window, "    ");
 
-            ncurses::mvwchgat(win, coord.0 as i32, curs_x, 1, ncurses::A_STANDOUT(), 0);
-            ncurses::wrefresh(win);
+            ncurses::mvwchgat(window, point.y, curs_x, 1, ncurses::A_STANDOUT(), 0);
+            ncurses::wrefresh(window);
 
-            let ch = ncurses::wget_wch(win).unwrap();
+            let ch = ncurses::wget_wch(window).unwrap();
             let ch = match ch {
                 ncurses::WchResult::Char(s) => s as i32,
                 ncurses::WchResult::KeyCode(s) => s,
@@ -76,7 +77,7 @@ impl JoshutoTextField {
                 break;
             } else if ch == ncurses::KEY_HOME {
                 if curr_index != 0 {
-                    curs_x = coord.1 as i32;
+                    curs_x = point.x;
                     curr_index = 0;
                 }
             } else if ch == ncurses::KEY_END {

@@ -26,12 +26,8 @@ impl SetMode {
         let (term_rows, term_cols) = ui::getmaxyx();
         let user_input: Option<String>;
         {
-            let textfield = JoshutoTextField::new(
-                1,
-                term_cols,
-                (term_rows as usize - 1, 0),
-                PROMPT.to_string(),
-            );
+            let textfield =
+                JoshutoTextField::new(1, term_cols, (term_rows as u32 - 1, 0), PROMPT.to_string());
 
             user_input = textfield.readline_with_initial(&start_str, "");
         }
@@ -90,8 +86,8 @@ impl JoshutoRunnable for SetMode {
         }
         if ok {
             let curr_tab = &mut context.tabs[context.curr_tab_index];
-            curr_tab.refresh_curr(&context.views.mid_win, context.config_t.scroll_offset);
-            curr_tab.refresh_file_status(&context.views.bot_win);
+            curr_tab.refresh_curr(&context.views.window_mid, context.config_t.scroll_offset);
+            curr_tab.refresh_file_status(&context.views.window_bot);
         }
     }
 }

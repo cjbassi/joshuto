@@ -40,10 +40,10 @@ impl CursorMove {
 
                 curr_list.index = new_index;
             }
-            curr_tab.refresh_curr(&context.views.mid_win, context.config_t.scroll_offset);
-            curr_tab.refresh_file_status(&context.views.bot_win);
+            curr_tab.refresh_curr(&context.views.window_mid, context.config_t.scroll_offset);
+            curr_tab.refresh_file_status(&context.views.window_bot);
             curr_tab.refresh_path_status(
-                &context.views.top_win,
+                &context.views.window_top,
                 &context.username,
                 &context.hostname,
                 context.config_t.tilde_in_titlebar,
@@ -111,7 +111,7 @@ impl JoshutoRunnable for CursorMovePageUp {
                     return;
                 }
 
-                let half_page = context.views.mid_win.cols / 2;
+                let half_page = context.views.window_mid.rect.width() / 2;
                 movement = Some(curr_index - half_page);
             }
         }
@@ -154,7 +154,7 @@ impl JoshutoRunnable for CursorMovePageDown {
                     return;
                 }
 
-                let half_page = context.views.mid_win.cols / 2;
+                let half_page = context.views.mid_winrect.width() / 2;
                 movement = Some(curr_index + half_page);
             }
         }

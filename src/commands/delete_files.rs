@@ -44,7 +44,7 @@ impl std::fmt::Display for DeleteFiles {
 
 impl JoshutoRunnable for DeleteFiles {
     fn execute(&self, context: &mut JoshutoContext) {
-        ui::wprint_msg(&context.views.bot_win, "Delete selected files? (Y/n)");
+        ui::wprint_msg(&context.views.window_bot, "Delete selected files? (Y/n)");
         ncurses::timeout(-1);
         ncurses::doupdate();
 
@@ -53,8 +53,8 @@ impl JoshutoRunnable for DeleteFiles {
             if let Some(s) = context.tabs[context.curr_tab_index].curr_list.as_ref() {
                 if let Some(paths) = commands::collect_selected_paths(s) {
                     match Self::remove_files(paths) {
-                        Ok(_) => ui::wprint_msg(&context.views.bot_win, "Deleted files"),
-                        Err(e) => ui::wprint_err(&context.views.bot_win, e.to_string().as_str()),
+                        Ok(_) => ui::wprint_msg(&context.views.window_bot, "Deleted files"),
+                        Err(e) => ui::wprint_err(&context.views.window_bot, e.to_string().as_str()),
                     }
                 }
             }
@@ -69,9 +69,9 @@ impl JoshutoRunnable for DeleteFiles {
             );
         } else {
             let curr_tab = &context.tabs[context.curr_tab_index];
-            curr_tab.refresh_file_status(&context.views.bot_win);
+            curr_tab.refresh_file_status(&context.views.window_bot);
             curr_tab.refresh_path_status(
-                &context.views.top_win,
+                &context.views.window_top,
                 &context.username,
                 &context.hostname,
                 context.config_t.tilde_in_titlebar,

@@ -9,6 +9,7 @@ use config::JoshutoColorTheme;
 use context::JoshutoContext;
 use structs;
 use unix;
+use utils::Point;
 use window;
 
 use theme_t;
@@ -51,57 +52,52 @@ pub fn end_ncurses() {
     ncurses::endwin();
 }
 
-pub fn getmaxyx() -> (i32, i32) {
-    let mut term_rows: i32 = 0;
-    let mut term_cols: i32 = 0;
-    ncurses::getmaxyx(ncurses::stdscr(), &mut term_rows, &mut term_cols);
-    (term_rows, term_cols)
+pub fn get_terminal_dimensions() -> (u32, u32) {
+    let mut width: i32 = 0;
+    let mut height: i32 = 0;
+    ncurses::getmaxyx(ncurses::stdscr(), &mut height, &mut width);
+    (width as u32, height as u32)
 }
 
 pub fn display_options(win: &window::JoshutoPanel, vals: &Vec<String>) {
-    ncurses::werase(win.win);
-    ncurses::mvwhline(win.win, 0, 0, 0, win.cols);
+    ncurses::werase(win.window);
+    ncurses::mvwhline(win.window, 0, 0, 0, win.rect.width() as i32);
 
     for (i, val) in vals.iter().enumerate() {
-        ncurses::wmove(win.win, (i + 1) as i32, 0);
-        ncurses::waddstr(win.win, val.as_str());
+        ncurses::wmove(win.window, (i + 1) as i32, 0);
+        ncurses::waddstr(win.window, val.as_str());
     }
-    ncurses::wnoutrefresh(win.win);
+    ncurses::wnoutrefresh(win.window);
 }
 
 pub fn wprint_msg(win: &window::JoshutoPanel, msg: &str) {
-    ncurses::werase(win.win);
-    ncurses::mvwaddstr(win.win, 0, 0, msg);
-    ncurses::wnoutrefresh(win.win);
+    ncurses::werase(win.window);
+    ncurses::mvwaddstr(win.window, 0, 0, msg);
+    ncurses::wnoutrefresh(win.window);
 }
 
 pub fn wprint_err(win: &window::JoshutoPanel, msg: &str) {
-    ncurses::werase(win.win);
-    ncurses::wattron(win.win, ncurses::A_BOLD());
-    ncurses::wattron(win.win, ncurses::COLOR_PAIR(ERR_COLOR));
-    ncurses::mvwaddstr(win.win, 0, 0, msg);
-    ncurses::wattroff(win.win, ncurses::COLOR_PAIR(ERR_COLOR));
-    ncurses::wattroff(win.win, ncurses::A_BOLD());
-    ncurses::wnoutrefresh(win.win);
+    ncurses::werase(win.window);
+    ncurses::wattron(win.window, ncurses::A_BOLD());
+    ncurses::wattron(win.window, ncurses::COLOR_PAIR(ERR_COLOR));
+    ncurses::mvwaddstr(win.window, 0, 0, msg);
+    ncurses::wattroff(win.window, ncurses::COLOR_PAIR(ERR_COLOR));
+    ncurses::wattroff(win.window, ncurses::A_BOLD());
+    ncurses::wnoutrefresh(win.window);
 }
 
 pub fn wprint_empty(win: &window::JoshutoPanel, msg: &str) {
-    ncurses::werase(win.win);
-    ncurses::wattron(win.win, ncurses::COLOR_PAIR(EMPTY_COLOR));
-    ncurses::mvwaddstr(win.win, 0, 0, msg);
-    ncurses::wattroff(win.win, ncurses::COLOR_PAIR(EMPTY_COLOR));
-    ncurses::wnoutrefresh(win.win);
+    ncurses::werase(win.window);
+    ncurses::wattron(win.window, ncurses::COLOR_PAIR(EMPTY_COLOR));
+    ncurses::mvwaddstr(win.window, 0, 0, msg);
+    ncurses::wattroff(win.window, ncurses::COLOR_PAIR(EMPTY_COLOR));
+    ncurses::wnoutrefresh(win.window);
 }
 
-fn wprint_file_name(
-    win: ncurses::WINDOW,
-    file_name: &str,
-    coord: (i32, i32),
-    mut space_avail: usize,
-) {
+fn wprint_file_name(win: ncurses::WINDOW, file_name: &str, point: Point, mut space_avail: u32) {
     let name_visual_space = unicode_width::UnicodeWidthStr::width(file_name);
     if name_visual_space < space_avail {
-        ncurses::mvwaddstr(win, coord.0, coord.1, &file_name);
+        ncurses::mvwaddstr(win, point.y, point.x, &file_name);
         return;
     }
     if let Some(ext) = file_name.rfind('.') {
@@ -109,18 +105,18 @@ fn wprint_file_name(
         let ext_len = unicode_width::UnicodeWidthStr::width(extension);
         if space_avail > ext_len {
             space_avail = space_avail - ext_len;
-            ncurses::mvwaddstr(win, coord.0, space_avail as i32, &extension);
+            ncurses::mvwaddstr(win, point.y, space_avail as i32, &extension);
         }
     }
     if space_avail > 2 {
         space_avail = space_avail - 2;
     }
 
-    ncurses::wmove(win, coord.0, coord.1);
+    ncurses::wmove(win, point.y, point.x);
 
-    let mut trim_index: usize = file_name.len();
+    let mut trim_index: u32 = file_name.len();
 
-    let mut total: usize = 0;
+    let mut total: u32 = 0;
     for (index, ch) in file_name.char_indices() {
         if total >= space_avail {
             trim_index = index;
@@ -135,20 +131,20 @@ fn wprint_file_name(
 pub fn wprint_entry(
     win: &window::JoshutoPanel,
     file: &structs::JoshutoDirEntry,
-    prefix: (usize, &str),
-    coord: (i32, i32),
+    prefix: (u32, &str),
+    point: Point,
 ) {
-    ncurses::waddstr(win.win, prefix.1);
-    let space_avail: usize;
-    if win.cols >= prefix.0 as i32 {
-        space_avail = win.cols as usize - prefix.0;
+    ncurses::waddstr(win.window, prefix.1);
+    let space_avail: u32;
+    if win.rect.width() >= prefix.0 {
+        space_avail = win.rect.width() - prefix.0;
     } else {
         space_avail = 0;
     }
     wprint_file_name(
-        win.win,
+        win.window,
         &file.file_name_as_string,
-        (coord.0, coord.1 + prefix.0 as i32),
+        Point::new(point.x, point.y + prefix.0 as i32),
         space_avail,
     );
 }
@@ -156,14 +152,14 @@ pub fn wprint_entry(
 pub fn wprint_entry_detailed(
     win: &window::JoshutoPanel,
     file: &structs::JoshutoDirEntry,
-    prefix: (usize, &str),
-    coord: (i32, i32),
+    prefix: (u32, &str),
+    point: Point,
 ) {
-    ncurses::waddstr(win.win, prefix.1);
-    let coord = (coord.0, coord.1 + prefix.0 as i32);
-    let mut space_avail: usize;
-    if win.cols >= prefix.0 as i32 {
-        space_avail = win.cols as usize - prefix.0;
+    ncurses::waddstr(win.window, prefix.1);
+    let point = Point::new(point.x, point.y + prefix.0 as i32);
+    let mut space_avail: u32;
+    if win.rect.width() >= prefix.0 {
+        space_avail = win.rect.width() - prefix.0;
     } else {
         space_avail = 0;
     }
@@ -173,11 +169,11 @@ pub fn wprint_entry_detailed(
         let file_size_string = file_size_to_string(file.metadata.len as f64);
         if space_avail > file_size_string.len() {
             space_avail = space_avail - file_size_string.len();
-            ncurses::mvwaddstr(win.win, coord.0, space_avail as i32, &file_size_string);
+            ncurses::mvwaddstr(win.window, point.y, space_avail as i32, &file_size_string);
         }
     }
 
-    wprint_file_name(win.win, &file.file_name_as_string, coord, space_avail);
+    wprint_file_name(win.window, &file.file_name_as_string, point, space_avail);
 }
 
 pub fn wprint_file_mode(win: ncurses::WINDOW, file: &structs::JoshutoDirEntry) {
@@ -215,23 +211,23 @@ pub fn wprint_file_info(win: ncurses::WINDOW, file: &structs::JoshutoDirEntry) {
 pub fn redraw_tab_view(win: &window::JoshutoPanel, context: &JoshutoContext) {
     let tab_len = context.tabs.len();
     if tab_len == 1 {
-        ncurses::werase(win.win);
+        ncurses::werase(win.window);
     } else {
-        ncurses::wmove(win.win, 0, 0);
-        ncurses::wattron(win.win, ncurses::A_BOLD());
+        ncurses::wmove(win.window, 0, 0);
+        ncurses::wattron(win.window, ncurses::A_BOLD());
         ncurses::waddstr(
-            win.win,
+            win.window,
             format!("{} {}", context.curr_tab_index + 1, tab_len).as_str(),
         );
-        ncurses::wattroff(win.win, ncurses::A_BOLD());
+        ncurses::wattroff(win.window, ncurses::A_BOLD());
     }
-    ncurses::wnoutrefresh(win.win);
+    ncurses::wnoutrefresh(win.window);
 }
 
 pub fn draw_progress_bar(win: &window::JoshutoPanel, percentage: f32) {
-    let cols: i32 = (win.cols as f32 * percentage) as i32;
+    let cols: i32 = (win.rect.width() as f32 * percentage) as i32;
     ncurses::mvwchgat(
-        win.win,
+        win.window,
         0,
         0,
         cols,
@@ -243,7 +239,7 @@ pub fn draw_progress_bar(win: &window::JoshutoPanel, percentage: f32) {
 pub fn get_theme_attr(
     mut attr: ncurses::attr_t,
     entry: &structs::JoshutoDirEntry,
-) -> ((usize, &str), ncurses::attr_t, i16) {
+) -> ((u32, &str), ncurses::attr_t, i16) {
     use std::os::unix::fs::FileTypeExt;
     use std::os::unix::fs::PermissionsExt;
 
@@ -299,7 +295,7 @@ pub fn get_theme_attr(
         attr = attr | ncurses::A_UNDERLINE();
     }
 
-    let mut prefix: (usize, &str) = (1, " ");
+    let mut prefix: (u32, &str) = (1, " ");
     if let Some(ref p1) = theme.prefix {
         if let Some(p2) = theme.prefixsize {
             prefix = (p2, &p1);

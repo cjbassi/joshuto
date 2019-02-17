@@ -39,12 +39,8 @@ impl RenameFile {
         let (term_rows, term_cols) = ui::getmaxyx();
         let user_input: Option<String>;
         {
-            let textfield = JoshutoTextField::new(
-                1,
-                term_cols,
-                (term_rows as usize - 1, 0),
-                PROMPT.to_string(),
-            );
+            let textfield =
+                JoshutoTextField::new(1, term_cols, (term_rows as u32 - 1, 0), PROMPT.to_string());
 
             user_input = match self.method {
                 RenameFileMethod::Append => {
@@ -64,7 +60,7 @@ impl RenameFile {
 
             new_path.push(s);
             if new_path.exists() {
-                ui::wprint_err(&context.views.bot_win, "Error: File with name exists");
+                ui::wprint_err(&context.views.window_bot, "Error: File with name exists");
                 return;
             }
             match fs::rename(&path, &new_path) {
@@ -73,15 +69,16 @@ impl RenameFile {
                     if let Some(ref mut s) = curr_tab.curr_list {
                         s.update_contents(&context.config_t.sort_type).unwrap();
                     }
-                    curr_tab.refresh_curr(&context.views.mid_win, context.config_t.scroll_offset);
+                    curr_tab
+                        .refresh_curr(&context.views.window_mid, context.config_t.scroll_offset);
                 }
                 Err(e) => {
-                    ui::wprint_err(&context.views.bot_win, e.to_string().as_str());
+                    ui::wprint_err(&context.views.window_bot, e.to_string().as_str());
                 }
             }
         } else {
             let curr_tab = &context.tabs[context.curr_tab_index];
-            curr_tab.refresh_file_status(&context.views.bot_win);
+            curr_tab.refresh_file_status(&context.views.window_bot);
         }
     }
 }

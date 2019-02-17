@@ -17,6 +17,7 @@ mod tab;
 mod textfield;
 mod ui;
 mod unix;
+mod utils;
 mod window;
 
 use std::path::PathBuf;

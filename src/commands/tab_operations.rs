@@ -21,7 +21,7 @@ impl NewTab {
         let curr_path: path::PathBuf = match env::current_dir() {
             Ok(path) => path,
             Err(e) => {
-                ui::wprint_err(&context.views.bot_win, e.to_string().as_str());
+                ui::wprint_err(&context.views.window_bot, e.to_string().as_str());
                 return;
             }
         };
@@ -34,7 +34,7 @@ impl NewTab {
                 TabSwitch::tab_switch(context.tabs.len() as i32 - 1, context);
             }
             Err(e) => {
-                ui::wprint_err(&context.views.bot_win, e.to_string().as_str());
+                ui::wprint_err(&context.views.window_bot, e.to_string().as_str());
             }
         };
     }

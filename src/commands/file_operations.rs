@@ -18,8 +18,8 @@ lazy_static! {
 }
 
 pub struct FileOperationThread {
-    pub tab_src: usize,
-    pub tab_dest: usize,
+    pub tab_src: u32,
+    pub tab_dest: u32,
     pub handle: thread::JoinHandle<i32>,
     pub recv: sync::mpsc::Receiver<ProgressInfo>,
 }
@@ -144,10 +144,7 @@ impl PasteFiles {
         use std::os::linux::fs::MetadataExt;
 
         let tab_dest = context.curr_tab_index;
-        let tab_src_index: usize;
-        {
-            tab_src_index = *tab_src.lock().unwrap();
-        }
+        let tab_src_index = { *tab_src.lock().unwrap() };
         let mut destination = context.tabs[tab_dest].curr_path.clone();
         let options = self.options.clone();
 
@@ -225,7 +222,7 @@ impl PasteFiles {
     #[cfg(not(target_os = "linux"))]
     fn cut(&self, context: &mut JoshutoContext) -> Result<FileOperationThread, std::io::Error> {
         let tab_dest = context.curr_tab_index;
-        let tab_src_index: usize;
+        let tab_src_index: u32;
         {
             tab_src_index = *tab_src.lock().unwrap();
         }
@@ -269,10 +266,7 @@ impl PasteFiles {
 
     fn copy(&self, context: &mut JoshutoContext) -> Result<FileOperationThread, std::io::Error> {
         let tab_dest = context.curr_tab_index;
-        let tab_src_index: usize;
-        {
-            tab_src_index = *tab_src.lock().unwrap();
-        }
+        let tab_src_index = { *tab_src.lock().unwrap() };
         let destination = context.tabs[tab_dest].curr_path.clone();
         let options = self.options.clone();
 

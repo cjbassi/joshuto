@@ -45,8 +45,8 @@ impl ParentDirectory {
                             };
                         }
                         None => {
-                            ncurses::werase(context.views.left_win.win);
-                            ncurses::wnoutrefresh(context.views.left_win.win);
+                            ncurses::werase(context.views.left_win.window);
+                            ncurses::wnoutrefresh(context.views.left_win.window);
                         }
                     }
                     curr_tab.refresh(
@@ -59,7 +59,7 @@ impl ParentDirectory {
                 preview::preview_file(context);
             }
             Err(e) => {
-                ui::wprint_err(&context.views.bot_win, e.to_string().as_str());
+                ui::wprint_err(&context.views.window_bot, e.to_string().as_str());
             }
         };
         ncurses::doupdate();

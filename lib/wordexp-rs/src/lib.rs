@@ -24,13 +24,13 @@ impl<'a> ToCStr for &'a str {
 #[allow(dead_code)]
 pub struct Wordexp<'a> {
     we_wordv: Vec<&'a str>,
-    counter: usize,
+    counter: u32,
     wordexp_ref: ll::wordexp_t,
 }
 
 impl<'a> Wordexp<'a> {
     pub fn new(wordexp_ref: ll::wordexp_t) -> Self {
-        let we_wordc: usize = wordexp_ref.we_wordc as usize;
+        let we_wordc: u32 = wordexp_ref.we_wordc as u32;
         let mut we_wordv: Vec<&str> = Vec::with_capacity(we_wordc);
         unsafe {
             let ptr: *const *const libc::c_char = wordexp_ref.we_wordv;

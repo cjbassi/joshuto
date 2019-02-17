@@ -1,70 +1,71 @@
 extern crate ncurses;
 
+use ui;
+use utils::{Point, Rectangle};
 use window::JoshutoPanel;
 
 #[derive(Debug)]
 pub struct JoshutoView {
-    pub top_win: JoshutoPanel,
-    pub tab_win: JoshutoPanel,
-    pub left_win: JoshutoPanel,
-    pub mid_win: JoshutoPanel,
-    pub right_win: JoshutoPanel,
-    pub bot_win: JoshutoPanel,
-    pub win_ratio: (usize, usize, usize),
+    pub window_top: JoshutoPanel,
+    pub window_bot: JoshutoPanel,
+    pub window_left: JoshutoPanel,
+    pub window_right: JoshutoPanel,
+    pub window_mid: JoshutoPanel,
+    pub window_tab: JoshutoPanel,
+    pub window_ratio: (u32, u32, u32),
 }
 
 impl JoshutoView {
-    pub fn new(win_ratio: (usize, usize, usize)) -> Self {
-        let sum_ratio: usize = win_ratio.0 + win_ratio.1 + win_ratio.2;
+    pub fn new(window_ratio: (u32, u32, u32)) -> Self {
+        let ratio_sum = window_ratio.0 + window_ratio.1 + window_ratio.2;
 
-        let mut term_rows: i32 = 0;
-        let mut term_cols: i32 = 0;
-        ncurses::getmaxyx(ncurses::stdscr(), &mut term_rows, &mut term_cols);
-        let term_divide: i32 = term_cols / sum_ratio as i32;
-
-        let win_xy: (i32, i32) = (1, term_cols - 5);
-        let win_coord: (usize, usize) = (0, 0);
-        let top_win = JoshutoPanel::new(win_xy.0, win_xy.1, win_coord);
-
-        let win_xy: (i32, i32) = (1, 5);
-        let win_coord: (usize, usize) = (0, term_cols as usize - 5);
-        let tab_win = JoshutoPanel::new(win_xy.0, win_xy.1, win_coord);
-
-        let win_xy: (i32, i32) = (term_rows - 2, (term_divide * win_ratio.0 as i32) - 1);
-        let win_coord: (usize, usize) = (1, 0);
-        let left_win = JoshutoPanel::new(win_xy.0, win_xy.1, win_coord);
-
-        let win_xy: (i32, i32) = (term_rows - 2, (term_divide * win_ratio.1 as i32) - 1);
-        let win_coord: (usize, usize) = (1, term_divide as usize * win_ratio.0);
-        let mid_win = JoshutoPanel::new(win_xy.0, win_xy.1, win_coord);
-
-        let win_xy: (i32, i32) = (term_rows - 2, (term_divide * win_ratio.2 as i32) - 1);
-        let win_coord: (usize, usize) = (1, term_divide as usize * win_ratio.2);
-        let right_win = JoshutoPanel::new(win_xy.0, win_xy.1, win_coord);
-
-        let win_xy: (i32, i32) = (1, term_cols);
-        let win_coord: (usize, usize) = (term_rows as usize - 1, 0);
-        let bot_win = JoshutoPanel::new(win_xy.0, win_xy.1, win_coord);
+        let (width, height) = ui::get_terminal_dimensions();
+        let (width, height) = (width as i32, height as i32);
+        let terminal_divide = width / ratio_sum as i32;
 
         JoshutoView {
-            top_win,
-            tab_win,
-            left_win,
-            mid_win,
-            right_win,
-            bot_win,
-            win_ratio,
+            window_top: JoshutoPanel::new(Rectangle::new(
+                Point::origin(),
+                Point::new(1, width - 5),
+            )),
+            window_bot: JoshutoPanel::new(Rectangle::new(
+                Point::new(height - 1, 0),
+                Point::new(height, width),
+            )),
+            window_left: JoshutoPanel::new(Rectangle::new(
+                Point::new(1, 0),
+                Point::new(height - 1, (terminal_divide * window_ratio.0 as i32) - 1),
+            )),
+            window_right: JoshutoPanel::new(Rectangle::new(
+                Point::new(1, terminal_divide * window_ratio.2 as i32),
+                Point::new(
+                    height - 1,
+                    2 * (terminal_divide * window_ratio.2 as i32) - 1,
+                ),
+            )),
+            window_mid: JoshutoPanel::new(Rectangle::new(
+                Point::new(1, terminal_divide * window_ratio.0 as i32),
+                Point::new(
+                    height - 1,
+                    2 * (terminal_divide * window_ratio.1 as i32) - 1,
+                ),
+            )),
+            window_tab: JoshutoPanel::new(Rectangle::new(
+                Point::new(0, width - 5),
+                Point::new(1, width),
+            )),
+            window_ratio,
         }
     }
 
     pub fn resize_views(&mut self) {
-        let new_view = Self::new(self.win_ratio);
+        let new_view = Self::new(self.window_ratio);
 
-        self.top_win = new_view.top_win;
-        self.bot_win = new_view.bot_win;
-        self.tab_win = new_view.tab_win;
-        self.left_win = new_view.left_win;
-        self.mid_win = new_view.mid_win;
-        self.right_win = new_view.right_win;
+        self.window_top = new_view.window_top;
+        self.window_bot = new_view.window_bot;
+        self.window_left = new_view.window_left;
+        self.window_right = new_view.window_right;
+        self.window_mid = new_view.window_mid;
+        self.window_tab = new_view.window_tab;
     }
 }

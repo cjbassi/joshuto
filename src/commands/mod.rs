@@ -230,7 +230,7 @@ pub fn collect_selected_paths(dirlist: &structs::JoshutoDirList) -> Option<Vec<P
     if selected.len() > 0 {
         Some(selected)
     } else {
-        Some(vec![dirlist.contents[dirlist.index as usize].path.clone()])
+        Some(vec![dirlist.contents[dirlist.index as u32].path.clone()])
     }
 }
 

@@ -1,6 +1,6 @@
 extern crate ncurses;
 
-use std::path;
+use std::path::{Path, PathBuf};
 use std::process;
 
 use commands::{JoshutoCommand, JoshutoRunnable};
@@ -10,20 +10,23 @@ use ui;
 
 #[derive(Clone, Debug)]
 pub struct ChangeDirectory {
-    path: path::PathBuf,
+    path: PathBuf,
 }
 
 impl ChangeDirectory {
-    pub fn new(path: path::PathBuf) -> Self {
+    pub fn new(path: PathBuf) -> Self {
         ChangeDirectory { path }
     }
     pub const fn command() -> &'static str {
         "cd"
     }
 
-    pub fn change_directory(path: &path::PathBuf, context: &mut JoshutoContext) {
+    pub fn change_directory(path: &Path, context: &mut JoshutoContext) {
         if !path.exists() {
-            ui::wprint_err(&context.views.bot_win, "Error: No such file or directory");
+            ui::wprint_err(
+                &context.views.window_bot,
+                "Error: No such file or directory",
+            );
             ncurses::doupdate();
             return;
         }
@@ -34,12 +37,12 @@ impl ChangeDirectory {
         let curr_list = curr_tab.curr_list.take();
         curr_tab.history.put_back(curr_list);
 
-        match std::env::set_current_dir(path.as_path()) {
+        match std::env::set_current_dir(path) {
             Ok(_) => {
-                curr_tab.curr_path = path.clone();
+                curr_tab.curr_path = path.to_path_buf();
             }
             Err(e) => {
-                ui::wprint_err(&context.views.bot_win, e.to_string().as_str());
+                ui::wprint_err(&context.views.window_bot, e.to_string().as_str());
                 return;
             }
         }
